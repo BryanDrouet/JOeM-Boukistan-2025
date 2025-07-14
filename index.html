@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Wordle Multijoueur</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="setup">
+        <h1>Wordle Multijoueur</h1>
+        <label>Nombre de joueurs :</label>
+        <div style="display: inline-flex;">
+            <button class="number-input" type="button" onclick="changePlayerCount(-1)">−</button>
+            <input type="number" id="playerCount" min="1" step="1" value="1">
+            <button class="number-input" type="button" onclick="changePlayerCount(1)">+</button>
+        </div>
+        <button class="startButton" onclick="startSetup()">Valider</button>
+    </div>
+
+    <div id="player-names" style="display:none;"></div>
+
+    <div id="rules">
+        <h2>Comment jouer ?</h2>
+        <p>Devine le mot en 6 essais maximum.</p>
+        <ul>
+            <li>Chaque essai doit être un mot français valide de 5 lettres.</li>
+            <li>Après chaque essai, les cases changent de couleur pour indiquer la proximité avec le mot à deviner.</li>
+        </ul>
+        <div class="example">
+            <div class="tile correct">W</div>
+            <div class="tile">O</div>
+            <div class="tile">R</div>
+            <div class="tile">D</div>
+            <div class="tile">Y</div>
+            <p>W est dans le mot et bien placé.</p>
+        </div>
+        <div class="example">
+            <div class="tile">L</div>
+            <div class="tile present">I</div>
+            <div class="tile">G</div>
+            <div class="tile">H</div>
+            <div class="tile">T</div>
+            <p>I est dans le mot mais mal placé.</p>
+        </div>
+        <div class="example">
+            <div class="tile">R</div>
+            <div class="tile">O</div>
+            <div class="tile">G</div>
+            <div class="tile absent">U</div>
+            <div class="tile">E</div>
+            <p>U n’est pas dans le mot.</p>
+        </div>
+    </div>
+
+    <div id="game" style="display:none;">
+        <h2 id="playerTurn"></h2>
+        <p id="timer">⏱️ 0.00s</p>
+        <div id="grid"></div>
+        <p id="message" style="color:var(--text-light)"></p>
+    </div>
+
+    <div id="ranking" style="display:none;">
+        <h2>Classement en cours</h2>
+        <ol id="currentRanking"></ol>
+    </div>
+
+    <div id="result" style="display:none;"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
