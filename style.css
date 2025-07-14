@@ -1,0 +1,326 @@
+@import url('https://fonts.googleapis.com/css2?family=Bowlby+One+SC&display=swap');
+
+:root {
+    --background: #121213;
+    --background2: #151516;
+    --tile-empty: #3a3a3c;
+    --tile-correct: #538d4e;
+    --tile-present: #b59f3b;
+    --tile-absent: #3a3a3c;
+    --text-light: #ffffff;
+    --text-muted: #d7dadc;
+    --input-bg: #202124;
+}
+
+body {
+    margin: 0;
+    font-family: 'Helvetica Neue', sans-serif;
+    background-color: var(--background);
+    color: var(--text-light);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2em;
+}
+
+h1, h2, h3 {
+    font-family: 'Bowlby One SC';
+    margin-bottom: 0.5em;
+    font-weight: 100 !important;
+}
+
+input[type="number"],
+input[type="text"] {
+    background-color: var(--input-bg);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    color: var(--text-light);
+    font-size: 1em;
+    margin: 0.5em 0;
+    width: 200px;
+    text-align: center;
+}
+
+button {
+    background-color: var(--tile-correct);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-weight: bold;
+    border-radius: 5px;
+    margin-top: 10px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+button:hover {
+    background-color: #6aaa64;
+}
+
+#guess {
+    text-transform: uppercase;
+    font-size: 1.2em;
+    letter-spacing: 0.2em;
+    text-align: center;
+    width: 150px;
+}
+
+#feedback p {
+    margin: 10px auto;
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+#feedback span {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    font-weight: bold;
+    font-size: 1.2em;
+    border-radius: 4px;
+    text-transform: uppercase;
+    text-align: center;
+}
+
+.correct {
+    background-color: var(--tile-correct);
+    color: white;
+}
+
+.present {
+    background-color: var(--tile-present);
+    color: white;
+}
+
+.absent {
+    background-color: var(--tile-absent);
+    color: white;
+}
+
+#timer {
+    font-size: 1.1em;
+    margin: 0.5em 0;
+    color: var(--text-muted);
+}
+
+#result {
+    max-width: 600px;
+    text-align: left;
+    margin-top: 2em;
+}
+
+#result ol,
+#result ul {
+    background-color: #1a1a1c;
+    padding: 1em;
+    border-radius: 8px;
+}
+
+#result li {
+    margin: 0.3em 0;
+}
+
+label {
+    font-size: 1.1em;
+    color: var(--text-muted);
+    text-align: center;
+}
+
+input::placeholder {
+    color: #888;
+}
+
+:root {
+    --background: #121213;
+    --tile-empty: #3a3a3c;
+    --tile-correct: #538d4e;
+    --tile-present: #b59f3b;
+    --tile-absent: #3a3a3c;
+    --text-light: #ffffff;
+    --text-muted: #d7dadc;
+    --input-bg: #202124;
+}
+body {
+    margin: 0; padding: 2em;
+    font-family: 'Helvetica Neue', sans-serif;
+    background-color: var(--background);
+    color: var(--text-light);
+    display: flex; flex-direction: column; align-items: center;
+}
+h1, h2, h3 { margin-bottom:2em;}
+input, button { font-size:1em; }
+input[type="number"], input[type="text"] {
+    background:var(--input-bg); color:var(--text-light);
+    border:none; padding:10px; border-radius:5px;
+    width:200px; text-align:center; margin:0.5em;
+}
+button {
+    background-color:var(--tile-correct); color:#fff;
+    border:none; padding:10px 20px; border-radius:5px;
+    font-weight:bold; cursor:pointer; transition:0.2s;
+}
+button:hover { background:#6aaa64; }
+#grid {
+    display:grid; 
+    margin:1em auto;
+}
+.row {
+    display: grid;
+    grid-template-columns: repeat(5, 60px); /* Augmenté */
+    gap: 12px; /* Plus d’espace entre les cases */
+    margin-bottom: 10px;
+}
+.tile {
+    width: 60px; height: 60px;
+    border:none; text-transform:uppercase;
+    font-size: 1.8em; font-weight:bold;
+    text-align:center; background:var(--input-bg);
+    color:var(--text-light); border-radius:4px;
+    padding: 2px;
+}
+.tile.correct { background:var(--tile-correct); }
+.tile.present { background:var(--tile-present); }
+.tile.absent    { background:var(--tile-absent); }
+#timer { color:var(--text-muted); }
+#ranking, #result { margin-top:2em; width:100%; max-width:600px; }
+#ranking ol, #result ol, #result ul {
+    background:#1a1a1c; padding:1em; border-radius:8px;
+}
+#message {margin-top:0.5em;}
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.player-count-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.number-input {
+    align-items: center;
+    background: #121213;
+    overflow: hidden;
+    background-color: #3a3a3c;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.number-input:hover {
+    background-color: #565758;
+}
+
+.number-input input[type=number] {
+    background: #121213;
+    color: white;
+    border: none;
+    text-align: center;
+    width: 60px;
+    padding: 10px;
+}
+
+#player-names, #setup {
+    display: grid;
+    text-align: center;
+}
+
+#player-names {
+    text-align: center;
+}
+
+.letter-box.filled {
+  border: 2px solid #565758;
+  font-weight: bold;
+}
+
+.startButton, .validateButton {
+    margin-top: 1em;
+}
+
+#playerCount, #player-names input {
+    width: 400px;
+}
+
+#rules {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 260px;
+  padding: 20px;
+  background: var(--background2);
+  border-right: 2px solid #ccc;
+  height: 100vh;
+  overflow-y: auto;
+  font-family: sans-serif;
+}
+
+#rules h2 {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+#rules p {
+  margin-top: 8px;
+}
+
+#rules li {
+    margin-bottom: 8px;
+}
+
+#rules ul {
+    padding-left: 24px;
+    margin-bottom: 50px;
+}
+
+.example {
+  margin-bottom: 20px;
+}
+
+.example .tile {
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  margin: 2px;
+  font-weight: bold;
+  font-size: 16px;
+  text-align: center;
+  line-height: 30px;
+  background: var(--input-bg);
+}
+
+.tile:nth-child(n+1):has(input:not([disabled])) {
+  outline: 2px solid #5f5f5f;
+  border-color: #202020;
+}
+
+/* Bord plus clair sur la case actuellement active */
+.tile:focus {
+  outline: 2px solid #5f5f5f;
+  border-color: #202020;
+}
+
+.tile.correct {
+    background-color: var(--tile-correct);
+    color: white;
+}
+
+.tile.present {
+    background-color: var(--tile-present);
+    color: white;
+}
+
+.tile.absent {
+    background-color: var(--tile-absent);
+    color: white;
+}
