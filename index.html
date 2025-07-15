@@ -20,11 +20,11 @@
             <option value="joem">JOeM Boukistan 2025</option>
         </select><br><br>
 
+        <label id="playerCountContainer">Nombre de joueurs :</label><br>
         <div id="playerCountContainer">
-            <label>Nombre de joueurs :</label>
             <div style="display: inline-flex;">
-                <button class="number-input" type="button" onclick="changePlayerCount(-1)">−</button>
-                <input type="number" id="playerCount" min="1" step="1" value="1">
+                <button id="minusBtn" class="number-input disabled" type="button" onclick="changePlayerCount(-1)">−</button>
+                <input type="number" id="playerCount" min="2" step="1" value="2">
                 <button class="number-input" type="button" onclick="changePlayerCount(1)">+</button>
             </div>
         </div>
