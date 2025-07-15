@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <title>Wordle Multijoueur</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="favicon.png" type="image/png">
     <link rel="apple-touch-icon" href="favicon.png">
@@ -20,8 +19,8 @@
             <option value="joem">JOeM Boukistan 2025</option>
         </select><br><br>
 
-        <label id="playerCountContainer">Nombre de joueurs :</label><br>
         <div id="playerCountContainer">
+            <label>Nombre de joueurs :</label><br><br>
             <div style="display: inline-flex;">
                 <button id="minusBtn" class="number-input disabled" type="button" onclick="changePlayerCount(-1)">−</button>
                 <input type="number" id="playerCount" min="2" step="1" value="2">
@@ -32,12 +31,12 @@
         <br><button class="startButton" onclick="startSetup()">Valider</button>
     </div>
 
-    <div id="joem-login" style="display:none;">
-        <h2>Connexion JOeM Boukistan 2025</h2>
-        <label for="delegation">Nom de la délégation :</label>
-        <input type="text" id="delegation"><br>
-        <label for="password">Mot de passe :</label>
-        <input type="password" id="password"><br>
+    <div id="joem-login" style="display:none; text-align: center;">
+        <h1>Wordle JOeM Boukistan 2025</h1>
+        <label for="delegation">Nom de la délégation :</label><br>
+        <div><input type="text" id="delegation"></div><br>
+        <label for="password">Mot de passe :</label><br>
+        <div><input type="password" id="password"></div><br>
         <button onclick="loginDelegation()">Se connecter</button>
     </div>
 
@@ -91,7 +90,6 @@
     <div id="result" style="display:none;"></div>
 
     <button id="hintButton" onclick="showNextHint()" style="position: fixed; bottom: 20px; right: 20px; padding: 10px 15px; font-size: 16px; border-radius: 10px; background: #222; color: white; border: none; display: none; z-index: 1000;">💡 Indice</button>
-    <button id="encryptButton" onclick="showEncryptPrompt()" style="position: fixed; bottom: 20px; right: 20px; padding: 10px 15px; font-size: 16px; border-radius: 10px; background: #ff3838; color: white; border: none; display: none; z-index: 1000;">🔐 Crypter</button>
 
     <script src="script.js"></script>
 </body>
