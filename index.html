@@ -4,17 +4,45 @@
     <meta charset="UTF-8">
     <title>Wordle Multijoueur</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
 </head>
 <body>
     <div id="setup">
-        <h1>Wordle Multijoueur</h1>
-        <label>Nombre de joueurs :</label>
-        <div style="display: inline-flex;">
-            <button class="number-input" type="button" onclick="changePlayerCount(-1)">−</button>
-            <input type="number" id="playerCount" min="1" step="1" value="1">
-            <button class="number-input" type="button" onclick="changePlayerCount(1)">+</button>
+        <h1>Wordle</h1>
+        <label>Mode de jeu :</label><br>
+        <select id="gameMode" onchange="onGameModeChange()">
+            <option value="multi">Multijoueur</option>
+            <option value="solo">Solo</option>
+            <option value="train">Entraînement</option>
+            <option value="joem">JOeM Boukistan 2025</option>
+        </select><br><br>
+
+        <div id="playerCountContainer">
+            <label>Nombre de joueurs :</label>
+            <div style="display: inline-flex;">
+                <button class="number-input" type="button" onclick="changePlayerCount(-1)">−</button>
+                <input type="number" id="playerCount" min="1" step="1" value="1">
+                <button class="number-input" type="button" onclick="changePlayerCount(1)">+</button>
+            </div>
         </div>
-        <button class="startButton" onclick="startSetup()">Valider</button>
+        
+        <br><button class="startButton" onclick="startSetup()">Valider</button>
+    </div>
+
+    <div id="joem-login" style="display:none;">
+        <h2>Connexion JOeM Boukistan 2025</h2>
+        <label for="delegation">Nom de la délégation :</label>
+        <input type="text" id="delegation"><br>
+        <label for="password">Mot de passe :</label>
+        <input type="password" id="password"><br>
+        <button onclick="loginDelegation()">Se connecter</button>
+    </div>
+
+    <!-- Choix du mot à deviner -->
+    <div id="joem-word-choice" style="display:none;">
+        <h2>Choisis un mot</h2>
+        <button id="word1Btn" onclick="chooseJoemWord(1)"></button>
+        <button id="word2Btn" onclick="chooseJoemWord(2)"></button>
     </div>
 
     <div id="player-names" style="display:none;"></div>
@@ -27,20 +55,20 @@
             <li>Après chaque essai, les cases changent de couleur pour indiquer la proximité avec le mot à deviner.</li>
         </ul>
         <div class="example">
-            <div class="tile correct">W</div>
-            <div class="tile">O</div>
-            <div class="tile">R</div>
-            <div class="tile">D</div>
-            <div class="tile">Y</div>
-            <p>W est dans le mot et bien placé.</p>
+            <div class="tile correct">T</div>
+            <div class="tile">A</div>
+            <div class="tile">B</div>
+            <div class="tile">L</div>
+            <div class="tile">E</div>
+            <p>T est dans le mot et bien placé.</p>
         </div>
         <div class="example">
-            <div class="tile">L</div>
-            <div class="tile present">I</div>
-            <div class="tile">G</div>
-            <div class="tile">H</div>
+            <div class="tile">P</div>
+            <div class="tile present">O</div>
+            <div class="tile">R</div>
             <div class="tile">T</div>
-            <p>I est dans le mot mais mal placé.</p>
+            <div class="tile">E</div>
+            <p>O est dans le mot mais mal placé.</p>
         </div>
         <div class="example">
             <div class="tile">R</div>
@@ -59,12 +87,10 @@
         <p id="message" style="color:var(--text-light)"></p>
     </div>
 
-    <div id="ranking" style="display:none;">
-        <h2>Classement en cours</h2>
-        <ol id="currentRanking"></ol>
-    </div>
-
     <div id="result" style="display:none;"></div>
+
+    <button id="hintButton" onclick="showNextHint()" style="position: fixed; bottom: 20px; right: 20px; padding: 10px 15px; font-size: 16px; border-radius: 10px; background: #222; color: white; border: none; display: none; z-index: 1000;">💡 Indice</button>
+    <button id="encryptButton" onclick="showEncryptPrompt()" style="position: fixed; bottom: 20px; right: 20px; padding: 10px 15px; font-size: 16px; border-radius: 10px; background: #ff3838; color: white; border: none; display: none; z-index: 1000;">🔐 Crypter</button>
 
     <script src="script.js"></script>
 </body>
