@@ -9,6 +9,9 @@ let joemData;
 let currentDelegation = null;
 let currentWords = [];
 
+const toggleBtn = document.getElementById('toggleRules');
+const rules = document.getElementById('rules');
+
 async function loginJOEM() {
   const name = document.getElementById("joem-delegation").value.trim();
   const pass = document.getElementById("joem-password").value;
@@ -388,6 +391,18 @@ function toggleRules() {
         rules.style.display = "none";
         btn.textContent = "Afficher le tuto";
     }
+}
+
+toggleBtn.addEventListener('click', () => {
+    if (rules.style.display === 'none') {
+        rules.style.display = 'block';
+    } else {
+        rules.style.display = 'none';
+    }
+});
+
+if (window.innerWidth < 768) {
+    rules.style.display = 'none';
 }
 
 loadWords();
