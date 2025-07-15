@@ -5,6 +5,7 @@
     <title>Wordle Multijoueur</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
     <div id="setup">
@@ -38,7 +39,6 @@
         <button onclick="loginDelegation()">Se connecter</button>
     </div>
 
-    <!-- Choix du mot à deviner -->
     <div id="joem-word-choice" style="display:none;">
         <h2>Choisis un mot</h2>
         <button id="word1Btn" onclick="chooseJoemWord(1)"></button>
@@ -46,6 +46,8 @@
     </div>
 
     <div id="player-names" style="display:none;"></div>
+
+    <button id="toggleRules" onclick="toggleRules()">Masquer le tuto</button>
 
     <div id="rules">
         <h2>Comment jouer ?</h2>
