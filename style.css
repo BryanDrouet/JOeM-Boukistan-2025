@@ -33,10 +33,10 @@ h1, h2, h3 {
 }
 
 input[type="number"],
-input[type="text"], select {
+input[type="text"], select, input#delegation, input#password {
     background-color: var(--input-bg);
     border: none;
-    padding: 10px 15px;
+    padding: 10px 10px;
     border-radius: 5px;
     color: var(--text-light);
     font-size: 1em;
@@ -46,10 +46,6 @@ input[type="text"], select {
 }
 
 select {
-    width: 100%;
-}
-
-#player-names input {
     width: 100%;
 }
 
@@ -131,7 +127,8 @@ button:hover {
 }
 
 #result li {
-    margin: 0.3em 0;
+    margin: 0.8em 0.8em;
+    text-align: left;
 }
 
 label {
@@ -260,7 +257,7 @@ input[type=number]::-webkit-outer-spin-button {
     width: 500px;
 }
 
-#player-names input {
+#player-names input, input#delegation, input#password {
     width: 400px;
 }
 
@@ -418,4 +415,9 @@ input[type=number]::-webkit-outer-spin-button {
 .disabled {
     pointer-events: none;
     background-color: #2a2a2c;
+}
+
+#result * {
+    list-style: none;
+    text-align: center;
 }
