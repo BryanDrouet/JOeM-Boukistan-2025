@@ -1,13 +1,8 @@
-let players=[], mots=[], curr=0, word="", startTime, timerInt;
-let maxGuesses=6, currRow=0;
-let results=[], failed=[], usedWords = [];
-let gameMode = "multi";
-let hintsRemaining = 0;
-let hintIndex = 0;
-let hintList = [];
-let joemData;
+let startTime, timerInt, joemData;
+let word="", gameMode = "multi";
 let currentDelegation = null;
-let currentWords = [];
+let curr=0, maxGuesses=6, currRow=0, hintsRemaining = 0; hintIndex = 0;
+let players=[], mots=[], hintList = [], results=[], failed=[], usedWords = [], currentWords = [];
 
 const toggleBtn = document.getElementById('toggleRules');
 const rules = document.getElementById('rules');
@@ -30,7 +25,6 @@ async function loginJOEM() {
 
   document.getElementById("joem-login").style.display = "none";
 
-  // Choix entre les deux mots
   const wordDiv = document.getElementById("joem-word-choice");
   wordDiv.innerHTML = `
     <h2>${entry.delegation}</h2>
@@ -43,7 +37,6 @@ async function loginJOEM() {
 
 function startJOEMGame(index) {
   const hashedWord = currentWords[index];
-  // Pour le Wordle, tu dois demander une vérification côté serveur de chaque mot entré
   players = [{ name: currentDelegation, word: hashedWord, time: 0, found: false }];
   document.getElementById("joem-word-choice").style.display = "none";
   document.getElementById("setup").style.display = "none";
@@ -55,7 +48,6 @@ async function onGameModeChange() {
     document.getElementById("playerCountContainer").style.display = (mode === "multi") ? "block" : "none";
     document.getElementById("joem-login").style.display = (mode === "joem") ? "grid" : "none";
     document.getElementById("setup").style.display = (mode === "joem") ? "none" : "block";
-    document.getElementById("encryptButton").style.display = (mode === "joem") ? "block" : "none";
 }
 
 async function showEncryptPrompt() {
@@ -73,16 +65,14 @@ async function loginDelegation() {
 
     const res = await fetch("delegations.json");
     joemData = await res.json();
-    const crypto = await getCrypto();
 
     const entry = joemData.find(d => d.delegation === delegation);
     if (!entry) return alert("Délégation inconnue.");
 
-    const match = await crypto.verify(password, entry.password);
-    if (!match) return alert("Mot de passe incorrect.");
+    if (password !== entry.password) return alert("Mot de passe incorrect.");
 
     document.getElementById("joem-login").style.display = "none";
-    document.getElementById("joem-word-choice").style.display = "block";
+    document.getElementById("joem-word-choice").style.display = "grid";
     document.getElementById("word1Btn").textContent = `Mot 1`;
     document.getElementById("word2Btn").textContent = `Mot 2`;
     document.getElementById("word1Btn").dataset.word = entry.word1;
@@ -108,10 +98,10 @@ function chooseJoemWord(index) {
 function getCrypto() {
     return {
         async encode(clear) {
-            return btoa(clear); // pour affichage, pas sécurité
+            return btoa(clear); 
         },
         async decode(base64) {
-            return atob(base64); // ne s’utilise que si c’est volontairement encodé en base64
+            return atob(base64); 
         },
         async hash(clear) {
             const salt = await bcrypt.genSalt(10);
@@ -131,6 +121,7 @@ async function loadWords(){
 
 function startSetup(){
     const mode = document.getElementById("gameMode").value;
+    gameMode = document.getElementById("gameMode").value;
 
     let count = parseInt(document.getElementById("playerCount").value);
     if (isNaN(count) || count < 2) {
@@ -147,7 +138,6 @@ function startSetup(){
         return;
     }
 
-    // Multijoueur
     const c = +document.getElementById("playerCount").value;
     if (!c || c < 1) return alert("Nombre de joueurs invalide.");
     document.getElementById("setup").style.display = "none";
@@ -188,12 +178,11 @@ function buildGrid(){
                     checkGuess();
                 } else if (e.key === "Backspace" && r === currRow) {
                     if (!inp.value) {
-                        // Aller à la case précédente si elle existe
                         if (c > 0) {
                             const prev = document.getElementsByClassName("row")[r].children[c - 1];
                             prev.focus();
-                            prev.value = ""; // supprimer la lettre
-                            e.preventDefault(); // éviter un backspace par défaut inutile
+                            prev.value = ""; 
+                            e.preventDefault(); 
                         }
                     }
                 }
@@ -214,7 +203,14 @@ function startTurn(){
     word=players[curr].word;
     currRow=0;
     document.getElementById("game").style.display="block";
-    document.getElementById("playerTurn").textContent="Au tour de : "+players[curr].name;
+    if (gameMode === "multi") {
+        document.getElementById("playerTurn").textContent = "Au tour de : " + players[curr].name;
+        document.getElementById("playerTurn").style.display = "block";
+    } else {
+        document.getElementById("playerTurn").textContent = "";
+        document.getElementById("playerTurn").style.display = "none";
+    }
+    
     buildGrid();
     startTime=Date.now();
     timerInt=setInterval(updateTimer,100);
@@ -289,15 +285,13 @@ function checkGuess() {
     const targetLetters = word.toLowerCase().split('');
     const result = Array(5).fill('absent');
 
-    // Étape 1 : Marquer les lettres correctes
     for (let i = 0; i < 5; i++) {
         if (guessLetters[i] === targetLetters[i]) {
             result[i] = 'correct';
-            targetLetters[i] = null; // Enlever la lettre du mot cible
+            targetLetters[i] = null; 
         }
     }
 
-    // Étape 2 : Marquer les lettres présentes
     for (let i = 0; i < 5; i++) {
         if (result[i] === 'correct') continue;
         const idx = targetLetters.indexOf(guessLetters[i]);
@@ -307,10 +301,9 @@ function checkGuess() {
         }
     }
 
-    // Appliquer les couleurs et verrouiller les cases
     for (let i = 0; i < 5; i++) {
         rowEls[i].classList.add(result[i]);
-        rowEls[i].disabled = true; // verrouiller la case
+        rowEls[i].disabled = true; 
     }
 
     document.getElementById("message").textContent = "";
