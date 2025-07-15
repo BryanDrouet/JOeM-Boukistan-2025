@@ -378,4 +378,16 @@ function restartGame() {
     }
 }
 
+function toggleRules() {
+    const rules = document.getElementById("rules");
+    const btn = document.getElementById("toggleRules");
+    if (rules.style.display === "none") {
+        rules.style.display = "block";
+        btn.textContent = "Masquer le tuto";
+    } else {
+        rules.style.display = "none";
+        btn.textContent = "Afficher le tuto";
+    }
+}
+
 loadWords();
