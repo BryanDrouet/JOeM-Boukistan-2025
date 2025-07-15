@@ -349,3 +349,51 @@ input[type=number]::-webkit-outer-spin-button {
     color: #00cc99; /* Vert turquoise */
     font-size: 24px;
 }
+
+@media (max-width: 600px) {
+    body {
+        padding: 1em;
+    }
+
+    h1, h2, h3 {
+        font-size: 1.5em;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    #guess,
+    .tile {
+        width: 100% !important;
+        font-size: 1.2em;
+    }
+
+    .row {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 8px;
+    }
+
+    .tile {
+        height: 50px;
+    }
+
+    .startButton, .validateButton {
+        width: 100%;
+    }
+
+    #player-names input {
+        width: 100%;
+    }
+
+    #rules {
+        position: static;
+        width: 100%;
+        height: auto;
+        border-right: none;
+        border-bottom: 2px solid #ccc;
+    }
+
+    #toggleRules {
+        margin-bottom: 1em;
+        width: 100%;
+    }
+}
