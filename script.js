@@ -212,6 +212,7 @@ function startTurn(){
     }
     
     buildGrid();
+    document.querySelector(".row input")?.focus();
     startTime=Date.now();
     timerInt=setInterval(updateTimer,100);
     if (gameMode === "train") {
