@@ -17,7 +17,8 @@
 body {
     margin: 0;
     font-family: 'Helvetica Neue', sans-serif;
-    background-color: var(--background);
+    background: linear-gradient(135deg, var(--background), #152021);
+    min-height: 100vh;
     color: var(--text-light);
     display: flex;
     flex-direction: column;
@@ -349,6 +350,8 @@ input[type=number]::-webkit-outer-spin-button {
 @media (max-width: 600px) {
     body {
         padding: 1em;
+        background: linear-gradient(135deg, var(--background), #152021);
+        min-height: 100vh;
     }
 
     h1, h2, h3 {
@@ -385,7 +388,7 @@ input[type=number]::-webkit-outer-spin-button {
         width: 100%;
         height: auto;
         border-right: none;
-        background: var(--background);
+        background: none;
     }
 
     #toggleRules {
