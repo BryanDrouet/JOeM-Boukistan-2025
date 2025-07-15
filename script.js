@@ -132,6 +132,12 @@ async function loadWords(){
 function startSetup(){
     const mode = document.getElementById("gameMode").value;
 
+    let count = parseInt(document.getElementById("playerCount").value);
+    if (isNaN(count) || count < 2) {
+        count = 2;
+        document.getElementById("playerCount").value = 2;
+    }
+
     if (mode === "solo" || mode === "train") {
         players = [{ name: "Joueur", word: "", time: 0, found: false }];
         mots.sort(() => Math.random() - 0.5);
@@ -375,6 +381,28 @@ function changePlayerCount(delta) {
     input.value = value;
 }
 
+function changePlayerCount(change) {
+    const input = document.getElementById('playerCount');
+    const minusBtn = document.getElementById('minusBtn');
+    let value = parseInt(input.value) + change;
+
+    if (value < 2) value = 2;
+    input.value = value;
+
+    if (value <= 2) {
+        minusBtn.classList.add("disabled");
+    } else {
+        minusBtn.classList.remove("disabled");
+    }
+}
+
+document.getElementById("playerCount").addEventListener("input", function () {
+    let val = parseFloat(this.value);
+    if (isNaN(val) || val < 2 || !Number.isInteger(val)) {
+        this.value = 2;
+    }
+});
+
 function restartGame() {
     if (confirm("Cette action va recommencer une nouvelle partie depuis le début.\nToutes les données actuelles seront perdues.\n\nVoulez-vous vraiment recommencer ?")) {
         location.reload();
@@ -404,5 +432,9 @@ toggleBtn.addEventListener('click', () => {
 if (window.innerWidth < 768) {
     rules.style.display = 'none';
 }
+
+window.onload = () => {
+    changePlayerCount(0); 
+};
 
 loadWords();
