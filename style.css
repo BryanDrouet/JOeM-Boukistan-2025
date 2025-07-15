@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Bowlby+One+SC&display=swap');
 
+@import url('https://fonts.googleapis.com/css2?family=Azeret+Mono&display=swap');
+
 :root {
     --background: #121213;
     --background2: #151516;
@@ -30,7 +32,7 @@ h1, h2, h3 {
 }
 
 input[type="number"],
-input[type="text"] {
+input[type="text"], select {
     background-color: var(--input-bg);
     border: none;
     padding: 10px 15px;
@@ -40,6 +42,14 @@ input[type="text"] {
     margin: 0.5em 0;
     width: 200px;
     text-align: center;
+}
+
+select {
+    width: 100%;
+}
+
+#player-names input {
+    width: 100%;
 }
 
 button {
@@ -246,9 +256,10 @@ input[type=number]::-webkit-outer-spin-button {
 
 .startButton, .validateButton {
     margin-top: 1em;
+    width: 500px;
 }
 
-#playerCount, #player-names input {
+#player-names input {
     width: 400px;
 }
 
@@ -323,4 +334,18 @@ input[type=number]::-webkit-outer-spin-button {
 .tile.absent {
     background-color: var(--tile-absent);
     color: white;
+}
+
+#playerTurn {
+    text-align: center;
+}
+
+#timer {
+    text-align: center;
+    font-family: "Azeret Mono", monospace;
+    font-optical-sizing: auto;
+    font-weight: 900;
+    font-style: normal;
+    color: #00cc99; /* Vert turquoise */
+    font-size: 24px;
 }
