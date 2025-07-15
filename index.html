@@ -47,14 +47,14 @@
 
     <div id="player-names" style="display:none;"></div>
 
-    <button id="toggleRules" onclick="toggleRules()">Masquer le tuto</button>
+    <button id="toggleRules" title="Afficher / Masquer le tutoriel">📘</button>
 
-    <div id="rules">
+    <div id="rules" style="text-align: center">
         <h2>Comment jouer ?</h2>
         <p>Devine le mot en 6 essais maximum.</p>
-        <ul>
-            <li>Chaque essai doit être un mot français valide de 5 lettres.</li>
-            <li>Après chaque essai, les cases changent de couleur pour indiquer la proximité avec le mot à deviner.</li>
+        <ul style="list-style-type:circle">
+            <li style="text-align: left !important">Chaque essai doit être un mot français valide de 5 lettres.</li>
+            <li style="text-align: left !important">Après chaque essai, les cases changent de couleur pour indiquer la proximité avec le mot à deviner.</li>
         </ul>
         <div class="example">
             <div class="tile correct">T</div>
@@ -62,24 +62,21 @@
             <div class="tile">B</div>
             <div class="tile">L</div>
             <div class="tile">E</div>
-            <p>T est dans le mot et bien placé.</p>
-        </div>
+        </div><p>T est dans le mot et bien placé.</p>
         <div class="example">
             <div class="tile">P</div>
             <div class="tile present">O</div>
             <div class="tile">R</div>
             <div class="tile">T</div>
             <div class="tile">E</div>
-            <p>O est dans le mot mais mal placé.</p>
-        </div>
+        </div><p>O est dans le mot mais mal placé.</p>
         <div class="example">
             <div class="tile">R</div>
             <div class="tile">O</div>
             <div class="tile">G</div>
             <div class="tile absent">U</div>
             <div class="tile">E</div>
-            <p>U n’est pas dans le mot.</p>
-        </div>
+        </div><p>U n’est pas dans le mot.</p>
     </div>
 
     <div id="game" style="display:none;">
