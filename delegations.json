@@ -1,8 +1,8 @@
 [
   {
     "delegation": "Boukistan",
-    "password": "$2y$10$/P39azlo8LJjLjgjTvLXneSbUfZL0LOdfvcVAmWDNDsxEuf7zGmhK", 
-    "word1": "$2y$10$Mh06MgqUsXxMdx7iSX3SIOvULi751/wrmi4RGg6hTWzcwhcrj5cb.",
-    "word2": "$2y$10$omqZGC2s3olK9UXhijU/bewemHmk/VKstpqteTRZ52RNuzJZfgjFi"
+    "password": "1234",
+    "word1": "avion",
+    "word2": "chien"
   }
 ]
