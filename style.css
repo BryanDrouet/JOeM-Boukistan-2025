@@ -1,423 +1,433 @@
-@import url('https://fonts.googleapis.com/css2?family=Bowlby+One+SC&display=swap');
+let startTime, timerInt, joemData;
+let word="", gameMode = "multi";
+let currentDelegation = null;
+let curr=0, maxGuesses=6, currRow=0, hintsRemaining = 0; hintIndex = 0;
+let players=[], mots=[], hintList = [], results=[], failed=[], usedWords = [], currentWords = [];
 
-@import url('https://fonts.googleapis.com/css2?family=Azeret+Mono&display=swap');
+const toggleBtn = document.getElementById('toggleRules');
+const rules = document.getElementById('rules');
 
-:root {
-    --background: #121213;
-    --background2: #151516;
-    --tile-empty: #3a3a3c;
-    --tile-correct: #538d4e;
-    --tile-present: #b59f3b;
-    --tile-absent: #3a3a3c;
-    --text-light: #ffffff;
-    --text-muted: #d7dadc;
-    --input-bg: #202124;
-}
+async function loginJOEM() {
+  const name = document.getElementById("joem-delegation").value.trim();
+  const pass = document.getElementById("joem-password").value;
 
-body {
-    margin: 0;
-    font-family: 'Helvetica Neue', sans-serif;
-    background: linear-gradient(135deg, var(--background), #152021);
-    min-height: 100vh;
-    color: var(--text-light);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2em;
-}
+  const res = await fetch("delegations.json");
+  const delegations = await res.json();
+  const entry = delegations.find(d => d.delegation.toLowerCase() === name.toLowerCase());
 
-h1, h2, h3 {
-    font-family: 'Bowlby One SC';
-    margin-bottom: 0.5em;
-    font-weight: 100 !important;
-}
+  if (!entry) return alert("Délégation introuvable.");
 
-input[type="number"],
-input[type="text"], select, input#delegation, input#password {
-    background-color: var(--input-bg);
-    border: none;
-    padding: 10px 10px;
-    border-radius: 5px;
-    color: var(--text-light);
-    font-size: 1em;
-    margin: 0.5em 0;
-    width: 200px;
-    text-align: center;
+  const passOk = await bcrypt.compare(pass, entry.password);
+  if (!passOk) return alert("Mot de passe incorrect.");
+
+  currentDelegation = entry.delegation;
+  currentWords = entry.words;
+
+  document.getElementById("joem-login").style.display = "none";
+
+  const wordDiv = document.getElementById("joem-word-choice");
+  wordDiv.innerHTML = `
+    <h2>${entry.delegation}</h2>
+    <p>Choisis un des deux mots secrets :</p>
+    <button onclick="startJOEMGame(0)">Mot 1</button>
+    <button onclick="startJOEMGame(1)">Mot 2</button>
+  `;
+  wordDiv.style.display = "block";
 }
 
-select {
-    width: 100%;
+function startJOEMGame(index) {
+  const hashedWord = currentWords[index];
+  players = [{ name: currentDelegation, word: hashedWord, time: 0, found: false }];
+  document.getElementById("joem-word-choice").style.display = "none";
+  document.getElementById("setup").style.display = "none";
+  startTurn();
 }
 
-button {
-    background-color: var(--tile-correct);
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    font-weight: bold;
-    border-radius: 5px;
-    margin-top: 10px;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+async function onGameModeChange() {
+    const mode = document.getElementById("gameMode").value;
+    document.getElementById("playerCountContainer").style.display = (mode === "multi") ? "block" : "none";
+    document.getElementById("joem-login").style.display = (mode === "joem") ? "grid" : "none";
+    document.getElementById("setup").style.display = (mode === "joem") ? "none" : "block";
 }
 
-button:hover {
-    background-color: #6aaa64;
+async function showEncryptPrompt() {
+    const mot = prompt("Entre un texte à crypter :");
+
+    const crypto = await getCrypto();
+    const hash = await crypto.hash(mot);
+    alert(`Mot hashé avec bcrypt :\n${hash}`);
 }
 
-#guess {
-    text-transform: uppercase;
-    font-size: 1.2em;
-    letter-spacing: 0.2em;
-    text-align: center;
-    width: 150px;
+async function loginDelegation() {
+    const delegation = document.getElementById("delegation").value.trim();
+    const password = document.getElementById("password").value;
+    if (!delegation || !password) return alert("Remplis tous les champs.");
+
+    const res = await fetch("delegations.json");
+    joemData = await res.json();
+
+    const entry = joemData.find(d => d.delegation === delegation);
+    if (!entry) return alert("Délégation inconnue.");
+
+    if (password !== entry.password) return alert("Mot de passe incorrect.");
+
+    document.getElementById("joem-login").style.display = "none";
+    document.getElementById("joem-word-choice").style.display = "grid";
+    document.getElementById("word1Btn").textContent = `Mot 1`;
+    document.getElementById("word2Btn").textContent = `Mot 2`;
+    document.getElementById("word1Btn").dataset.word = entry.word1;
+    document.getElementById("word2Btn").dataset.word = entry.word2;
 }
 
-#feedback p {
-    margin: 10px auto;
-    display: flex;
-    justify-content: center;
-    gap: 5px;
+function chooseJoemWord(index) {
+    const btn = document.getElementById(index === 1 ? "word1Btn" : "word2Btn");
+    const hashedWord = btn.dataset.word;
+
+    players = [{
+        name: document.getElementById("delegation").value,
+        word: hashedWord,
+        time: 0,
+        found: false
+    }];
+
+    document.getElementById("joem-word-choice").style.display = "none";
+    document.getElementById("game").style.display = "block";
+    startTurn();
 }
 
-#feedback span {
-    display: inline-block;
-    width: 40px;
-    height: 40px;
-    line-height: 40px;
-    font-weight: bold;
-    font-size: 1.2em;
-    border-radius: 4px;
-    text-transform: uppercase;
-    text-align: center;
+function getCrypto() {
+    return {
+        async encode(clear) {
+            return btoa(clear); 
+        },
+        async decode(base64) {
+            return atob(base64); 
+        },
+        async hash(clear) {
+            const salt = await bcrypt.genSalt(10);
+            return await bcrypt.hash(clear, salt);
+        },
+        async verify(input, hashed) {
+            return await bcrypt.compare(input, hashed);
+        }
+    };
 }
 
-.correct {
-    background-color: var(--tile-correct);
-    color: white;
+async function loadWords(){
+    const res=await fetch("mots.txt");
+    mots=(await res.text()).trim().split("\n").map(w=>w.trim());
+    mots=mots.filter(w=>w.length===5);
 }
 
-.present {
-    background-color: var(--tile-present);
-    color: white;
-}
+function startSetup(){
+    const mode = document.getElementById("gameMode").value;
+    gameMode = document.getElementById("gameMode").value;
 
-.absent {
-    background-color: var(--tile-absent);
-    color: white;
-}
-
-#timer {
-    font-size: 1.1em;
-    margin: 0.5em 0;
-    color: var(--text-muted);
-}
-
-#result {
-    max-width: 600px;
-    text-align: left;
-    margin-top: 2em;
-}
-
-#result ol,
-#result ul {
-    background-color: #1a1a1c;
-    padding: 1em;
-    border-radius: 8px;
-}
-
-#result li {
-    margin: 0.8em 0.8em;
-    text-align: left;
-}
-
-label {
-    font-size: 1.1em;
-    color: var(--text-muted);
-    text-align: center;
-}
-
-input::placeholder {
-    color: #888;
-}
-
-:root {
-    --background: #121213;
-    --tile-empty: #3a3a3c;
-    --tile-correct: #538d4e;
-    --tile-present: #b59f3b;
-    --tile-absent: #3a3a3c;
-    --text-light: #ffffff;
-    --text-muted: #d7dadc;
-    --input-bg: #202124;
-}
-body {
-    margin: 0; padding: 2em;
-    font-family: 'Helvetica Neue', sans-serif;
-    background-color: var(--background);
-    color: var(--text-light);
-    display: flex; flex-direction: column; align-items: center;
-}
-h1, h2, h3 { margin-bottom:2em;}
-input, button { font-size:1em; }
-input[type="number"], input[type="text"] {
-    background:var(--input-bg); color:var(--text-light);
-    border:none; padding:10px; border-radius:5px;
-    width:200px; text-align:center; margin:0.5em;
-}
-button {
-    background-color:var(--tile-correct); color:#fff;
-    border:none; padding:10px 20px; border-radius:5px;
-    font-weight:bold; cursor:pointer; transition:0.2s;
-}
-button:hover { background:#6aaa64; }
-#grid {
-    display:grid; 
-    margin:1em auto;
-}
-.row {
-    display: grid;
-    grid-template-columns: repeat(5, 60px); /* Augmenté */
-    gap: 12px; /* Plus d’espace entre les cases */
-    margin-bottom: 10px;
-}
-.tile {
-    width: 60px; height: 60px;
-    border:none; text-transform:uppercase;
-    font-size: 1.8em; font-weight:bold;
-    text-align:center; background:var(--input-bg);
-    color:var(--text-light); border-radius:4px;
-    padding: 2px;
-}
-.tile.correct { background:var(--tile-correct); }
-.tile.present { background:var(--tile-present); }
-.tile.absent    { background:var(--tile-absent); }
-#timer { color:var(--text-muted); }
-#ranking, #result { margin-top:2em; width:100%; max-width:600px; }
-#ranking ol, #result ol, #result ul {
-    background:#1a1a1c; padding:1em; border-radius:8px;
-}
-#message {margin-top:0.5em;}
-
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.player-count-container {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-
-.number-input {
-    align-items: center;
-    background: #121213;
-    overflow: hidden;
-    background-color: #464648;
-    color: white;
-    border: none;
-    cursor: pointer;
-    transition: background 0.2s;
-    margin-top: 8px;
-    margin-bottom: 8px;
-}
-
-.number-input:hover {
-    background-color: #565758;
-}
-
-.number-input input[type=number] {
-    background: #121213;
-    color: white;
-    border: none;
-    text-align: center;
-    width: 60px;
-    padding: 10px;
-}
-
-#player-names, #setup {
-    display: grid;
-    text-align: center;
-}
-
-#player-names {
-    text-align: center;
-}
-
-.letter-box.filled {
-  border: 2px solid #565758;
-  font-weight: bold;
-}
-
-.startButton, .validateButton {
-    margin-top: 1em;
-    width: 500px;
-}
-
-#player-names input, input#delegation, input#password {
-    width: 400px;
-}
-
-#rules {
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 260px;
-  padding: 20px;
-  background: var(--background2);
-  border-right: 2px solid #ccc;
-  height: 100vh;
-  overflow-y: auto;
-  font-family: sans-serif;
-}
-
-#rules h2 {
-  font-size: 20px;
-  margin-bottom: 10px;
-}
-
-#rules p {
-  margin-top: 8px;
-}
-
-#rules li {
-    margin-bottom: 8px;
-}
-
-#rules ul {
-    padding-left: 24px;
-    margin-bottom: 50px;
-}
-
-.example .tile {
-  display: inline-block;
-  width: 30px;
-  height: 30px;
-  margin: 2px;
-  font-weight: bold;
-  font-size: 16px;
-  text-align: center;
-  line-height: 30px;
-  background: var(--input-bg);
-}
-
-.tile:nth-child(n+1):has(input:not([disabled])) {
-  outline: 2px solid #5f5f5f;
-  border-color: #202020;
-}
-
-/* Bord plus clair sur la case actuellement active */
-.tile:focus {
-  outline: 2px solid #5f5f5f;
-  border-color: #202020;
-}
-
-.tile.correct {
-    background-color: var(--tile-correct);
-    color: white;
-}
-
-.tile.present {
-    background-color: var(--tile-present);
-    color: white;
-}
-
-.tile.absent {
-    background-color: var(--tile-absent);
-    color: white;
-}
-
-#playerTurn {
-    text-align: center;
-}
-
-#timer {
-    text-align: center;
-    font-family: "Azeret Mono", monospace;
-    font-optical-sizing: auto;
-    font-weight: 900;
-    font-style: normal;
-    color: #00cc99; /* Vert turquoise */
-    font-size: 24px;
-}
-
-@media (max-width: 600px) {
-    body {
-        padding: 1em;
-        background: linear-gradient(135deg, var(--background), #152021);
-        min-height: 100vh;
+    let count = parseInt(document.getElementById("playerCount").value);
+    if (isNaN(count) || count < 2) {
+        count = 2;
+        document.getElementById("playerCount").value = 2;
     }
 
-    h1, h2, h3 {
-        font-size: 1.5em;
+    if (mode === "solo" || mode === "train") {
+        players = [{ name: "Joueur", word: "", time: 0, found: false }];
+        mots.sort(() => Math.random() - 0.5);
+        players[0].word = mots[0];
+        document.getElementById("setup").style.display = "none";
+        startTurn();
+        return;
     }
 
-    input[type="text"],
-    input[type="number"],
-    #guess,
-    .tile {
-        font-size: 1.2em;
-    }
+    const c = +document.getElementById("playerCount").value;
+    if (!c || c < 1) return alert("Nombre de joueurs invalide.");
+    document.getElementById("setup").style.display = "none";
+    let div = document.getElementById("player-names");
+    div.innerHTML = "<h1>Wordle Multijoueur</h1><label>Pseudos des joueurs :</label><br>";
+    for (let i = 0; i < c; i++) div.innerHTML += `<div><input type="text" id="n${i}" placeholder="Joueur ${i + 1}"><br><div>`;
+    div.innerHTML += `<br><button class="validateButton" onclick="validateNames(${c})">Commencer</button>`;
+    div.style.display = "grid";
+}
 
-    .row {
-        grid-template-columns: repeat(5, 1fr);
-        gap: 8px;
+function validateNames(n){
+    for(let i=0;i<n;i++){
+        let nm=document.getElementById("n"+i).value.trim();
+        if(!nm) return alert("Remplis tous les noms.");
+        players.push({name:nm, word:"", time:0, found:false});
     }
-
-    .tile {
-        height: 50px;
+    if (players.length > mots.length) {
+        alert("Attention : il n'y a pas assez de mots différents pour chaque joueur !");
     }
+    mots.sort(()=>Math.random()-0.5);
+    players.forEach((p,i)=>p.word=mots[i]);
+    document.getElementById("player-names").style.display="none";
+    startTurn();
+}
 
-    .startButton, .validateButton {
-        width: 100%;
-    }
-
-    #player-names input {
-        width: 100%;
-    }
-
-    #rules {
-        margin-top: 40px;
-        position: static;
-        width: 100%;
-        height: auto;
-        border-right: none;
-        background: none;
-    }
-
-    #toggleRules {
-        top: 10px;
-        right: 10px;
+function buildGrid(){
+    const g=document.getElementById("grid");
+    g.innerHTML="";
+    for(let r=0;r<maxGuesses;r++){
+        const row=document.createElement("div"); row.className="row";
+        for(let c=0;c<5;c++){
+            const inp=document.createElement("input");
+            inp.className="tile"; inp.maxLength=1;
+            inp.disabled = r!==0;
+            inp.addEventListener("input", ()=>{ if(inp.value) moveFocus(r,c+1); });
+            inp.addEventListener("keydown", e => {
+                if (e.key === "Enter" && r === currRow) {
+                    checkGuess();
+                } else if (e.key === "Backspace" && r === currRow) {
+                    if (!inp.value) {
+                        if (c > 0) {
+                            const prev = document.getElementsByClassName("row")[r].children[c - 1];
+                            prev.focus();
+                            prev.value = ""; 
+                            e.preventDefault(); 
+                        }
+                    }
+                }
+            });
+            row.appendChild(inp);
+        }
+        g.appendChild(row);
     }
 }
 
-#toggleRules {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    font-size: 26px;
-    cursor: pointer;
-    color: var(--text-muted);
-    z-index: 1000;
-    transition: color 0.3s ease, transform 0.2s ease;
+function moveFocus(r,c){
+    if(c<5) document.getElementsByClassName("row")[r].children[c].focus();
 }
 
-#toggleRules:hover {
-    color: white;
-    transform: scale(1.1);
+function startTurn(){
+    usedWords = [];
+    if(curr>=players.length) return showResults();
+    word=players[curr].word;
+    currRow=0;
+    document.getElementById("game").style.display="block";
+    if (gameMode === "multi") {
+        document.getElementById("playerTurn").textContent = "Au tour de : " + players[curr].name;
+        document.getElementById("playerTurn").style.display = "block";
+    } else {
+        document.getElementById("playerTurn").textContent = "";
+        document.getElementById("playerTurn").style.display = "none";
+    }
+    
+    buildGrid();
+    startTime=Date.now();
+    timerInt=setInterval(updateTimer,100);
+    if (gameMode === "train") {
+        prepareHints();
+        document.getElementById("hintButton").style.display = "block";
+        hintIndex = 0;
+    }
+    else {
+        document.getElementById("hintButton").style.display = "none";
+    }
 }
 
-.disabled {
-    pointer-events: none;
-    background-color: #2a2a2c;
+function prepareHints() {
+    let w = word.toLowerCase().split("");
+    let hint1 = Math.floor(Math.random() * 5);
+    let hint2;
+    do {
+        hint2 = Math.floor(Math.random() * 5);
+    } while (hint2 === hint1);
+
+    hintList = [
+        `🧠 Indice 1 : La lettre "${w[hint1].toUpperCase()}" est bien placée à la position ${hint1 + 1}.`,
+        `🧠 Indice 2 : La lettre "${w[hint2].toUpperCase()}" est dans le mot, mais pas à sa place.`
+    ];
 }
 
-#result * {
-    list-style: none;
-    text-align: center;
+function showNextHint() {
+    if (hintIndex < hintList.length) {
+        alert(hintList[hintIndex]);
+        hintIndex++;
+        if (hintIndex >= hintList.length) {
+            document.getElementById("hintButton").style.display = "none";
+        }
+    }
 }
+
+function showHints() {
+    let w = word.toLowerCase().split("");
+    let hint1 = Math.floor(Math.random() * 5);
+    let hint2;
+    do {
+        hint2 = Math.floor(Math.random() * 5);
+    } while (hint2 === hint1);
+
+    let letterInWord = w[hint1];
+    let letterElsewhere = w[hint2];
+
+    alert(`🧠 Indices :
+- La lettre "${letterInWord.toUpperCase()}" est bien placée à la position ${hint1 + 1}.
+- La lettre "${letterElsewhere.toUpperCase()}" est dans le mot, mais pas à sa place.`);
+}
+
+function updateTimer(){
+    document.getElementById("timer").textContent=`⏱️ ${((Date.now()-startTime)/1000).toFixed(2)}s`;
+}
+
+function checkGuess() {
+    const rowEls = document.getElementsByClassName("row")[currRow].children;
+    const guess = [...rowEls].map(i => i.value.toLowerCase()).join("");
+
+    if (guess.length < 5) return;
+
+    if (usedWords.includes(guess)) {
+        document.getElementById("message").textContent = "Mot déjà tenté !";
+        return;
+    }
+
+    usedWords.push(guess);
+
+    const guessLetters = guess.split('');
+    const targetLetters = word.toLowerCase().split('');
+    const result = Array(5).fill('absent');
+
+    for (let i = 0; i < 5; i++) {
+        if (guessLetters[i] === targetLetters[i]) {
+            result[i] = 'correct';
+            targetLetters[i] = null; 
+        }
+    }
+
+    for (let i = 0; i < 5; i++) {
+        if (result[i] === 'correct') continue;
+        const idx = targetLetters.indexOf(guessLetters[i]);
+        if (idx !== -1) {
+            result[i] = 'present';
+            targetLetters[idx] = null;
+        }
+    }
+
+    for (let i = 0; i < 5; i++) {
+        rowEls[i].classList.add(result[i]);
+        rowEls[i].disabled = true; 
+    }
+
+    document.getElementById("message").textContent = "";
+
+    if (guess === word.toLowerCase()) {
+        win();
+    } else {
+        currRow++;
+        if (currRow < maxGuesses) {
+            const nextRow = document.getElementsByClassName("row")[currRow].children;
+            [...nextRow].forEach(inp => inp.disabled = false);
+            nextRow[0].focus();
+        } else {
+            lose();
+        }
+    }
+}
+
+function win(){
+    clearInterval(timerInt);
+    players[curr].found = true;
+    players[curr].time = (Date.now() - startTime) / 1000;
+    curr++;
+    setTimeout(startTurn, 500);
+}
+
+function lose(){
+    clearInterval(timerInt);
+    players[curr].found = false;
+
+    const lastGuess = [...document.getElementsByClassName("row")[currRow - 1].children]
+        .map(i => i.value.toLowerCase());
+
+    let correctLetters = 0;
+    for (let i = 0; i < 5; i++) {
+        if (lastGuess[i] === players[curr].word[i].toLowerCase()) correctLetters++;
+    }
+
+    players[curr].correctLetters = correctLetters;
+    curr++;
+    setTimeout(startTurn, 500);
+}
+
+function showResults() {
+    document.getElementById("game").style.display = "none";
+    document.getElementById("rules").style.display = "none";
+    const d = document.getElementById("result");
+    let html = "<h2>📝 Résultats finaux</h2><ul>";
+
+    players.forEach(p => {
+        if (p.found) {
+            html += `<li>${p.name} — trouvé en ${p.time.toFixed(2)}s</li>`;
+        } else {
+            html += `<li>${p.name} — ${p.correctLetters || 0}/5 lettres bien placées (Mot : ${p.word})</li>`;
+        }
+    });
+
+    html += "</ul>";
+    d.innerHTML = html;
+    d.style.display = "block";
+}
+
+function changePlayerCount(delta) {
+    const input = document.getElementById("playerCount");
+    let value = parseInt(input.value) || 1;
+    value += delta;
+    if (value < 1) value = 1;
+    input.value = value;
+}
+
+function changePlayerCount(change) {
+    const input = document.getElementById('playerCount');
+    const minusBtn = document.getElementById('minusBtn');
+    let value = parseInt(input.value) + change;
+
+    if (value < 2) value = 2;
+    input.value = value;
+
+    if (value <= 2) {
+        minusBtn.classList.add("disabled");
+    } else {
+        minusBtn.classList.remove("disabled");
+    }
+}
+
+document.getElementById("playerCount").addEventListener("input", function () {
+    let val = parseFloat(this.value);
+    if (isNaN(val) || val < 2 || !Number.isInteger(val)) {
+        this.value = 2;
+    }
+});
+
+function restartGame() {
+    if (confirm("Cette action va recommencer une nouvelle partie depuis le début.\nToutes les données actuelles seront perdues.\n\nVoulez-vous vraiment recommencer ?")) {
+        location.reload();
+    }
+}
+
+function toggleRules() {
+    const rules = document.getElementById("rules");
+    const btn = document.getElementById("toggleRules");
+    if (rules.style.display === "none") {
+        rules.style.display = "block";
+        btn.textContent = "Masquer le tuto";
+    } else {
+        rules.style.display = "none";
+        btn.textContent = "Afficher le tuto";
+    }
+}
+
+toggleBtn.addEventListener('click', () => {
+    if (rules.style.display === 'none') {
+        rules.style.display = 'block';
+    } else {
+        rules.style.display = 'none';
+    }
+});
+
+if (window.innerWidth < 768) {
+    rules.style.display = 'none';
+}
+
+window.onload = () => {
+    changePlayerCount(0); 
+};
+
+loadWords();
