@@ -1,6 +1,124 @@
 let players=[], mots=[], curr=0, word="", startTime, timerInt;
 let maxGuesses=6, currRow=0;
 let results=[], failed=[], usedWords = [];
+let gameMode = "multi";
+let hintsRemaining = 0;
+let hintIndex = 0;
+let hintList = [];
+let joemData;
+let currentDelegation = null;
+let currentWords = [];
+
+async function loginJOEM() {
+  const name = document.getElementById("joem-delegation").value.trim();
+  const pass = document.getElementById("joem-password").value;
+
+  const res = await fetch("delegations.json");
+  const delegations = await res.json();
+  const entry = delegations.find(d => d.delegation.toLowerCase() === name.toLowerCase());
+
+  if (!entry) return alert("Délégation introuvable.");
+
+  const passOk = await bcrypt.compare(pass, entry.password);
+  if (!passOk) return alert("Mot de passe incorrect.");
+
+  currentDelegation = entry.delegation;
+  currentWords = entry.words;
+
+  document.getElementById("joem-login").style.display = "none";
+
+  // Choix entre les deux mots
+  const wordDiv = document.getElementById("joem-word-choice");
+  wordDiv.innerHTML = `
+    <h2>${entry.delegation}</h2>
+    <p>Choisis un des deux mots secrets :</p>
+    <button onclick="startJOEMGame(0)">Mot 1</button>
+    <button onclick="startJOEMGame(1)">Mot 2</button>
+  `;
+  wordDiv.style.display = "block";
+}
+
+function startJOEMGame(index) {
+  const hashedWord = currentWords[index];
+  // Pour le Wordle, tu dois demander une vérification côté serveur de chaque mot entré
+  players = [{ name: currentDelegation, word: hashedWord, time: 0, found: false }];
+  document.getElementById("joem-word-choice").style.display = "none";
+  document.getElementById("setup").style.display = "none";
+  startTurn();
+}
+
+async function onGameModeChange() {
+    const mode = document.getElementById("gameMode").value;
+    document.getElementById("playerCountContainer").style.display = (mode === "multi") ? "block" : "none";
+    document.getElementById("joem-login").style.display = (mode === "joem") ? "grid" : "none";
+    document.getElementById("setup").style.display = (mode === "joem") ? "none" : "block";
+    document.getElementById("encryptButton").style.display = (mode === "joem") ? "block" : "none";
+}
+
+async function showEncryptPrompt() {
+    const mot = prompt("Entre un texte à crypter :");
+
+    const crypto = await getCrypto();
+    const hash = await crypto.hash(mot);
+    alert(`Mot hashé avec bcrypt :\n${hash}`);
+}
+
+async function loginDelegation() {
+    const delegation = document.getElementById("delegation").value.trim();
+    const password = document.getElementById("password").value;
+    if (!delegation || !password) return alert("Remplis tous les champs.");
+
+    const res = await fetch("delegations.json");
+    joemData = await res.json();
+    const crypto = await getCrypto();
+
+    const entry = joemData.find(d => d.delegation === delegation);
+    if (!entry) return alert("Délégation inconnue.");
+
+    const match = await crypto.verify(password, entry.password);
+    if (!match) return alert("Mot de passe incorrect.");
+
+    document.getElementById("joem-login").style.display = "none";
+    document.getElementById("joem-word-choice").style.display = "block";
+    document.getElementById("word1Btn").textContent = `Mot 1`;
+    document.getElementById("word2Btn").textContent = `Mot 2`;
+    document.getElementById("word1Btn").dataset.word = entry.word1;
+    document.getElementById("word2Btn").dataset.word = entry.word2;
+}
+
+function chooseJoemWord(index) {
+    const btn = document.getElementById(index === 1 ? "word1Btn" : "word2Btn");
+    const hashedWord = btn.dataset.word;
+
+    players = [{
+        name: document.getElementById("delegation").value,
+        word: hashedWord,
+        time: 0,
+        found: false
+    }];
+
+    document.getElementById("joem-word-choice").style.display = "none";
+    document.getElementById("game").style.display = "block";
+    startTurn();
+}
+
+function getCrypto() {
+    return {
+        async encode(clear) {
+            return btoa(clear); // pour affichage, pas sécurité
+        },
+        async decode(base64) {
+            return atob(base64); // ne s’utilise que si c’est volontairement encodé en base64
+        },
+        async hash(clear) {
+            const salt = await bcrypt.genSalt(10);
+            return await bcrypt.hash(clear, salt);
+        },
+        async verify(input, hashed) {
+            return await bcrypt.compare(input, hashed);
+        }
+    };
+}
 
 async function loadWords(){
     const res=await fetch("mots.txt");
@@ -9,14 +127,26 @@ async function loadWords(){
 }
 
 function startSetup(){
-    const c=+document.getElementById("playerCount").value;
+    const mode = document.getElementById("gameMode").value;
+
+    if (mode === "solo" || mode === "train") {
+        players = [{ name: "Joueur", word: "", time: 0, found: false }];
+        mots.sort(() => Math.random() - 0.5);
+        players[0].word = mots[0];
+        document.getElementById("setup").style.display = "none";
+        startTurn();
+        return;
+    }
+
+    // Multijoueur
+    const c = +document.getElementById("playerCount").value;
     if (!c || c < 1) return alert("Nombre de joueurs invalide.");
-    document.getElementById("setup").style.display="none";
-    let div=document.getElementById("player-names");
-    div.innerHTML="<h1>Wordle Multijoueur</h1><label>Pseudos des joueurs :</label>";
-    for(let i=0;i<c;i++) div.innerHTML+=`<div><input type="text" id="n${i}" placeholder="Joueur ${i+1}"><br><div>`;
-    div.innerHTML+=`<button class="validateButton" onclick="validateNames(${c})">Commencer</button>`;
-    div.style.display="grid";
+    document.getElementById("setup").style.display = "none";
+    let div = document.getElementById("player-names");
+    div.innerHTML = "<h1>Wordle Multijoueur</h1><label>Pseudos des joueurs :</label><br>";
+    for (let i = 0; i < c; i++) div.innerHTML += `<div><input type="text" id="n${i}" placeholder="Joueur ${i + 1}"><br><div>`;
+    div.innerHTML += `<br><button class="validateButton" onclick="validateNames(${c})">Commencer</button>`;
+    div.style.display = "grid";
 }
 
 function validateNames(n){
@@ -79,6 +209,54 @@ function startTurn(){
     buildGrid();
     startTime=Date.now();
     timerInt=setInterval(updateTimer,100);
+    if (gameMode === "train") {
+        prepareHints();
+        document.getElementById("hintButton").style.display = "block";
+        hintIndex = 0;
+    }
+    else {
+        document.getElementById("hintButton").style.display = "none";
+    }
+}
+
+function prepareHints() {
+    let w = word.toLowerCase().split("");
+    let hint1 = Math.floor(Math.random() * 5);
+    let hint2;
+    do {
+        hint2 = Math.floor(Math.random() * 5);
+    } while (hint2 === hint1);
+
+    hintList = [
+        `🧠 Indice 1 : La lettre "${w[hint1].toUpperCase()}" est bien placée à la position ${hint1 + 1}.`,
+        `🧠 Indice 2 : La lettre "${w[hint2].toUpperCase()}" est dans le mot, mais pas à sa place.`
+    ];
+}
+
+function showNextHint() {
+    if (hintIndex < hintList.length) {
+        alert(hintList[hintIndex]);
+        hintIndex++;
+        if (hintIndex >= hintList.length) {
+            document.getElementById("hintButton").style.display = "none";
+        }
+    }
+}
+
+function showHints() {
+    let w = word.toLowerCase().split("");
+    let hint1 = Math.floor(Math.random() * 5);
+    let hint2;
+    do {
+        hint2 = Math.floor(Math.random() * 5);
+    } while (hint2 === hint1);
+
+    let letterInWord = w[hint1];
+    let letterElsewhere = w[hint2];
+
+    alert(`🧠 Indices :
+- La lettre "${letterInWord.toUpperCase()}" est bien placée à la position ${hint1 + 1}.
+- La lettre "${letterElsewhere.toUpperCase()}" est dans le mot, mais pas à sa place.`);
 }
 
 function updateTimer(){
@@ -144,45 +322,46 @@ function checkGuess() {
 
 function win(){
     clearInterval(timerInt);
-    players[curr].found=true;
-    players[curr].time=(Date.now()-startTime)/1000;
+    players[curr].found = true;
+    players[curr].time = (Date.now() - startTime) / 1000;
     curr++;
-    updateRanking();
-    setTimeout(startTurn,500);
+    setTimeout(startTurn, 500);
 }
 
 function lose(){
     clearInterval(timerInt);
-    players[curr].found=false;
-    players[curr].time=Infinity;
-    curr++;
-    updateRanking();
-    setTimeout(startTurn,500);
-}
+    players[curr].found = false;
 
-function updateRanking(){
-    const ol=document.getElementById("currentRanking");
-    ol.innerHTML="";
-    players.filter(p=>p.found).sort((a,b)=>a.time-b.time)
-        .forEach(p=>ol.innerHTML+=`<li>${p.name} — ${p.time.toFixed(2)}s</li>`);
-}
+    const lastGuess = [...document.getElementsByClassName("row")[currRow - 1].children]
+        .map(i => i.value.toLowerCase());
 
-function showResults(){
-    document.getElementById("game").style.display="none";
-    document.getElementById("ranking").style.display="none";
-    const d=document.getElementById("result");
-    const win=players.filter(p=>p.found).sort((a,b)=>a.time-b.time);
-    const lose=players.filter(p=>!p.found);
-    let html="<h2>🏆 Résultat final</h2><ol>";
-    win.forEach(p=>html+=`<li>${p.name} — ${p.time.toFixed(2)}s</li>`);
-    html+="</ol>";
-    if(lose.length){
-        html+="<h3>❌ Non trouvés :</h3><ul>";
-        lose.forEach(p=>html+=`<li>${p.name} (Mot : ${p.word})</li>`);
-        html+="</ul>";
+    let correctLetters = 0;
+    for (let i = 0; i < 5; i++) {
+        if (lastGuess[i] === players[curr].word[i].toLowerCase()) correctLetters++;
     }
-    d.innerHTML=html; d.style.display="block";
-    document.getElementById("ranking").style.display = "none";
+
+    players[curr].correctLetters = correctLetters;
+    curr++;
+    setTimeout(startTurn, 500);
+}
+
+function showResults() {
+    document.getElementById("game").style.display = "none";
+    document.getElementById("rules").style.display = "none";
+    const d = document.getElementById("result");
+    let html = "<h2>📝 Résultats finaux</h2><ul>";
+
+    players.forEach(p => {
+        if (p.found) {
+            html += `<li>${p.name} — trouvé en ${p.time.toFixed(2)}s</li>`;
+        } else {
+            html += `<li>${p.name} — ${p.correctLetters || 0}/5 lettres bien placées (Mot : ${p.word})</li>`;
+        }
+    });
+
+    html += "</ul>";
+    d.innerHTML = html;
+    d.style.display = "block";
 }
 
 function changePlayerCount(delta) {
@@ -191,6 +370,12 @@ function changePlayerCount(delta) {
     value += delta;
     if (value < 1) value = 1;
     input.value = value;
+}
+
+function restartGame() {
+    if (confirm("Cette action va recommencer une nouvelle partie depuis le début.\nToutes les données actuelles seront perdues.\n\nVoulez-vous vraiment recommencer ?")) {
+        location.reload();
+    }
 }
 
 loadWords();
